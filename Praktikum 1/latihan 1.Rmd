@@ -36,7 +36,7 @@ library("TSA")
 ```{r}
 #install.packages("rio") #install jika belum ada
 library(rio)
-datampdwp1 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/Praktikum%201/harga%20saham%20samsung%202013-2023.csv")
+datampdwp1 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/Data/harga%20saham%20samsung%202013-2023.csv")
 ```
 
 ## Eksplorasi Data
@@ -581,7 +581,7 @@ Pertama impor kembali data baru untuk latihan data musiman.
 ```{r}
 #Import data
 library(rio)
-datampdwp1 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/Praktikum%201/harga%20saham%20samsung%202013-2023.csv")
+datampdwp1 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/Data/harga%20saham%20samsung%202013-2023.csv")
 data3.ts <- ts(datampdw$Close)
 ```
 
