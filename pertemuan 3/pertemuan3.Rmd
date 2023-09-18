@@ -60,7 +60,7 @@ $$
 Berikut adalah hasil peramalan y untuk 12 periode kedepan menggunakan model koyck
 ```{r}
 fore.koyck <- forecast(model=model.koyck, x=test3$total, h=12)
-fore.koyc
+fore.koyck
 mape.koyck <- MAPE(fore.koyck$forecasts, test3$perkapita)
 #akurasi data training
 GoF(model.koyck)
