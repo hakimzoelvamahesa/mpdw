@@ -1,0 +1,258 @@
+---
+title: "pertemuan 3"
+author: "Hakim Zoelva Mahesa"
+date: "2023-09-18"
+output: html_document
+---
+
+```{r}
+#install.packages("dLagM") 
+#install.packages("dynlm") 
+#install.packages("MLmetrics")
+library(dLagM)
+library(dynlm)
+library(MLmetrics)
+library(lmtest)
+library(car)
+```
+
+
+
+##impor data
+```{r}
+dtp3 <- rio::import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/pertemuan%203/fossil%20fuel%20co2%20emission.csv")
+dtp3 <- dtp3[,c(3,8)]
+colnames(dtp3) <- c("perkapita","total")
+data.frame(dtp3)
+str(dtp3)
+View(dtp3)
+```
+
+
+##pembagian data
+```{r}
+train3 <- dtp3[1:52,]
+test3 <- dtp3[53:64,]
+```
+
+
+##mengubah menjadi data time series
+```{r}
+train3.ts <- ts(train3)
+test3.ts <- ts(test3)
+dtp3.ts <- ts(dtp3)
+```
+
+
+##model koyck
+```{r}
+model.koyck <- koyckDlm(x=train3$total, y=train3$perkapita)
+summary(model.koyck)
+AIC(model.koyck)
+BIC(model.koyck)
+```
+Dari hasil tersebut, didapat bahwa peubah $x_t$ dan $y_{t-1}$ memiliki nilai $P-Value<0.05$. Hal ini menunjukkan bahwa peubah $x_t$ dan $y_{t-1}$ berpengaruh signifikan terhadap $y$. Adapun model keseluruhannya adalah sebagai berikut
+$$
+\hat{Y_t}=4.393e-01-5.498e-06X_t+1.147e+00Y_{t-1}
+$$
+
+##peramalan dan akurasi
+Berikut adalah hasil peramalan y untuk 12 periode kedepan menggunakan model koyck
+```{r}
+fore.koyck <- forecast(model=model.koyck, x=test3$total, h=12)
+fore.koyck
+mape.koyck <- MAPE(fore.koyck$forecasts, test3$perkapita)
+#akurasi data training
+GoF(model.koyck)
+```
+
+##regresi dengan peubah lag
+```{r}
+##pemodelan (lag=2)
+model.dlm<-dlm(x=dtp3$total, y=dtp3$perkapita, q=2)
+summary(model.dlm)
+AIC(model.dlm)
+BIC(model.dlm)
+```
+Dari hasil diatas, didapat bahwa $P-value$ dari intercept dan $x_{t-1}<0.05$. Hal ini menunjukkan bahwa intercept dan $x_{t-1}$ berpengaruh signifikan terhadap $y$. Adapun model keseluruhan yang terbentuk adalah sebagai berikut
+
+$$
+\hat{Y_t}=-8.551e-01+2.558e-05X_t+3.036e-07{t-1}-2.664e-06X_{t-2}
+$$
+
+##peramalan dan akurasi
+Berikut merupakan hasil peramalan $y$ untuk 12 periode kedepan
+```{r}
+fore.dlm <- forecast(model=model.dlm, x=test3$total, h=12)
+fore.dlm
+mape.dlm <- MAPE(fore.dlm$forecasts, test3$perkapita)
+#akurasi data training
+GoF(model.dlm)
+```
+
+##lag optimum
+```{r}
+#penentuan lag optimum 
+finiteDLMauto(formula = perkapita ~ total,
+              data = train3, q.min = 1, q.max = 6,
+              model.type = "dlm", error.type = "AIC", trace = FALSE)
+```
+Berdasarkan output tersebut, lag optimum didapatkan ketika lag=6. Selanjutnya dilakukan pemodelan untuk lag=6
+
+```{r}
+#model dlm dengan lag optimum
+model.dlm2 <- dlm(x = train3$total,y = train3$perkapita , q = 6)
+summary(model.dlm2)
+AIC(model.dlm2)
+BIC(model.dlm2)
+```
+Dari hasil tersebut terdapat satu peubah yang berpengaruh signifikan terhadap taraf nyata 5% yaitu $x_t$. Adapun keseluruhan model yang terbentuk adalah
+$$
+\hat{Y_t}=46929.3+45860.8 X_t+...+3153.7X_{t-6}
+$$
+Adapun hasil peramalan 5 periode kedepan menggunakan model tersebut adalah sebagai berikut
+
+```{r}
+#peramalan dan akurasi
+fore.dlm2 <- forecast(model = model.dlm2, x=test3$total, h=12)
+mape.dlm2<- MAPE(fore.dlm2$forecasts, test3$perkapita)
+#akurasi data training
+GoF(model.dlm2)
+```
+Model tersebut merupakan model yang sangat baik dengan nilai MAPE yang kurang dari 10%.
+
+## Model Autoregressive
+### Pemodelan
+```{r}
+model.ardl <- ardlDlm(x = train3$total, y = train3$perkapita, p = 1 , q = 1)
+summary(model.ardl)
+AIC(model.ardl)
+BIC(model.ardl)
+```
+Hasil di atas menunjukkan bahwa semua peubah berpengaruh signifikan terhadap $y_t$. Model keseluruhannya adalah sebagai berikut:
+
+$$
+\hat{Y}=1.738e+02+5.654e+04X_t-5.529e+04X_{t-1}+9.788e-01Y_{t-1}
+$$
+### Peramalan dan Akurasi
+
+```{r}
+fore.ardl <- forecast(model = model.ardl, x=test3$total, h=12)
+fore.ardl
+```
+```{r}
+mape.ardl <- MAPE(fore.ardl$forecasts, test3$perkapita)
+mape.ardl
+#akurasi data training
+GoF(model.ardl)
+```
+
+Berdasarkan akurasi di atas, terlihat bahwa nilai MAPE keduanya tidak jauh berbeda. Artinya, model regresi dengan distribusi lag ini tidak `overfitted` atau `underfitted`
+
+### *Lag* Optimum
+
+```{r}
+#penentuan lag optimum
+model.ardl.opt <- ardlBoundOrders(data = data.frame(dtp3), ic = "AIC", 
+                                  formula = perkapita ~ total )
+min_p=c()
+for(i in 1: 12){
+  min_p[i]=min(model.ardl.opt$Stat.table[[i]])
+}
+q_opt=which(min_p==min(min_p, na.rm = TRUE))
+p_opt=which(smodel.ardl.opt$Stat.table[[q_opt]] == 
+              min(model.ardl.opt$Stat.table[[q_opt]], na.rm = TRUE))
+data.frame("q_optimum" = q_opt, "p_optimum" = p_opt, 
+           "AIC"=model.ardl.opt$min.Stat)
+```
+Dari tabel di atas, dapat terlihat bahwa nilai AIC terendah didapat ketika $p=15$ dan $q=8$, yaitu sebesar `698.5319	`. Artinya, model autoregressive optimum didapat ketika $p=15$ dan $q=8$.
+
+Selanjutnya dapat dilakukan pemodelan dengan nilai $p$ dan $q$ optimum seperti inisialisasi di langkah sebelumnya.
+
+
+## Pemodelan DLM & ARDL dengan Library `dynlm`
+
+Pemodelan regresi dengan peubah *lag* tidak hanya dapat dilakukan dengan fungsi pada *packages* `dLagM` , tetapi terdapat *packages* `dynlm` yang dapat digunakan. 
+
+```{r}
+#sama dengan model dlm q=1
+cons_lm1 <- dynlm(perkapita ~ total+L(total),data = train3.ts)
+#sama dengan model ardl p=1 q=0
+cons_lm2 <- dynlm(perkapita ~ total+L(total),data = train3.ts)
+#sama dengan ardl p=1 q=1
+cons_lm3 <- dynlm(perkapita ~ total+L(total)+L(perkapita),data = train3.ts)
+#sama dengan dlm p=2
+cons_lm4 <- dynlm(perkapita ~ total+L(total)+L(total,2), data = train3.ts)
+```
+
+### Ringkasan Model
+
+```{r}
+summary(cons_lm1)
+summary(cons_lm2)
+summary(cons_lm3)
+summary(cons_lm4)
+```
+### SSE
+
+```{r}
+deviance(cons_lm1)
+deviance(cons_lm2)
+deviance(cons_lm3)
+deviance(cons_lm4)
+```
+
+
+#### Autokorelasi
+
+```{r}
+#durbin watson
+dwtest(cons_lm1)
+dwtest(cons_lm2)
+dwtest(cons_lm3)
+dwtest(cons_lm4)
+```
+
+#### Heterogenitas
+
+```{r}
+bptest(cons_lm1)
+bptest(cons_lm2)
+bptest(cons_lm3)
+bptest(cons_lm4)
+```
+
+#### Kenormalan
+
+```{r}
+shapiro.test(residuals(cons_lm1))
+shapiro.test(residuals(cons_lm2))
+shapiro.test(residuals(cons_lm3))
+shapiro.test(residuals(cons_lm4))
+```
+## Perbandingan Model
+
+```{r}
+akurasi <- matrix(c(mape.koyck, mape.dlm, mape.dlm2, mape.ardl))
+row.names(akurasi)<- c("Koyck","DLM 1","DLM 2","Autoregressive")
+colnames(akurasi) <- c("MAPE")
+akurasi
+```
+Berdasarkan nilai MAPE, model paling optimum didapat pada Model DLM 1 karena memiliki nilai MAPE yang terkecil.
+
+### Plot
+
+```{r}
+par(mfrow=c(1,1))
+plot(test3$total, test3$perkapita, type="b", col="black", ylim=c(100000,200000))
+points(test3$total, fore.koyck$forecasts,col="red")
+lines(test3$total, fore.koyck$forecasts,col="red")
+points(test3$total, fore.dlm$forecasts,col="blue")
+lines(test3$total, fore.dlm$forecasts,col="blue")
+points(test3$total, fore.dlm2$forecasts,col="orange")
+lines(test3$total, fore.dlm2$forecasts,col="orange")
+points(test3$total, fore.ardl$forecasts,col="green")
+lines(test3$total, fore.ardl$forecasts,col="green")
+legend("topleft",c("aktual", "koyck","DLM 1","DLM 2", "autoregressive"), lty=1, col=c("black","red","blue","orange","green"), cex=0.8)
+```
+
