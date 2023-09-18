@@ -25,7 +25,7 @@ dtp3 <- dtp3[,c(3,8)]
 colnames(dtp3) <- c("perkapita","total")
 data.frame(dtp3)
 str(dtp3)
-View(dtp3)
+#View(dtp3)
 ```
 
 
@@ -60,7 +60,7 @@ $$
 Berikut adalah hasil peramalan y untuk 12 periode kedepan menggunakan model koyck
 ```{r}
 fore.koyck <- forecast(model=model.koyck, x=test3$total, h=12)
-fore.koyck
+fore.koyc
 mape.koyck <- MAPE(fore.koyck$forecasts, test3$perkapita)
 #akurasi data training
 GoF(model.koyck)
