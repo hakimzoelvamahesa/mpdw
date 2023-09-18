@@ -160,7 +160,7 @@ for(i in 1: 12){
   min_p[i]=min(model.ardl.opt$Stat.table[[i]])
 }
 q_opt=which(min_p==min(min_p, na.rm = TRUE))
-p_opt=which(smodel.ardl.opt$Stat.table[[q_opt]] == 
+p_opt=which(model.ardl.opt$Stat.table[[q_opt]] == 
               min(model.ardl.opt$Stat.table[[q_opt]], na.rm = TRUE))
 data.frame("q_optimum" = q_opt, "p_optimum" = p_opt, 
            "AIC"=model.ardl.opt$min.Stat)
