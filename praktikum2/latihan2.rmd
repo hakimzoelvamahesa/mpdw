@@ -25,7 +25,7 @@ library(HoRM) #untuk membuat model regresi Hildreth-Lu
 
 ```{r}
 library(rio)
-dtp2 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/Data%20M2/praktikum2.csv.csv")
+dtp2 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/praktikum2/praktikum2.csv.csv")
 dtp2
 ```
 
@@ -261,9 +261,9 @@ Terakhir, akan dibandingkan nilai SSE dari ketiga metode (metode awal, metode Co
 sseModelawal <- anova(model)$`Sum Sq`[-1]
 sseModelCO <- anova(modelCOmanual)$`Sum Sq`[-1]
 sseModelHL <- anova(modelHL)$`Sum Sq`[-1]
-mseModelawal <- sseModelawal/length(ipm)
-mseModelCO <- sseModelCO/length(ipm)
-mseModelHL <- sseModelHL/length(ipm)
+mseModelawal <- sseModelawal/length(dtp2$`Per Capita`)
+mseModelCO <- sseModelCO/length(dtp2$`Per Capita`)
+mseModelHL <- sseModelHL/length(dtp2$`Per Capita`)
 akurasi <- matrix(c(sseModelawal,sseModelCO,sseModelHL,
                     mseModelawal,mseModelCO,mseModelHL),nrow=2,ncol=3,byrow = T)
 colnames(akurasi) <- c("Model Awal", "Model Cochrane-Orcutt", "Model Hildreth-Lu")

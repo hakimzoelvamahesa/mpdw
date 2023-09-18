@@ -289,6 +289,7 @@ ses.2
 Untuk mendapatkan gambar hasil pemulusan pada data latih dengan fungsi `ses()` , perlu digunakan fungsi `autoplot()` dan `autolayer()` dari *library packages* `ggplot2` .
 
 ```{r}
+library(ggplot2)
 autoplot(ses.1) +
   autolayer(fitted(ses.1), series="Fitted") +
   ylab("Saham") + xlab("Periode") + theme_classic()
@@ -443,7 +444,7 @@ Selain dengan cara di atas, perhitungan nilai akurasi dapat menggunakan fungsi `
 
 ```{r}
 #cara lain
-accuracy(ramalanopt,testing)
+accuracy(ramalanopt,testing$Close)
 ```
 
 ### DES
@@ -582,7 +583,7 @@ Pertama impor kembali data baru untuk latihan data musiman.
 #Import data
 library(rio)
 datampdwp1 <- import("https://raw.githubusercontent.com/hakimzoelvamahesa/mpdw/main/Data/harga%20saham%20samsung%202013-2023.csv")
-data3.ts <- ts(datampdw$Close)
+data3.ts <- ts(datampdwp1$Close)
 ```
 
 Selanjutnya melakukan pembagian data dan mengubahnya menjadi data deret waktu.
